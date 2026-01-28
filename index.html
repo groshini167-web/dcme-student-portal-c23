@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="manifest" href="manifest.json">
+  <title>DCME Student Portal</title>
+  <style>
+    body { font-family: Arial; margin:0; background:#f4f6f8 }
+    header { background:#1e3a8a; color:white; padding:15px; font-size:20px }
+    .container { display:flex }
+    .sidebar { width:230px; background:#e5e7eb; min-height:100vh; padding:10px }
+    .sidebar button {
+      width:100%; padding:10px; margin-bottom:8px;
+      border:none; background:white; cursor:pointer;
+      text-align:left; font-size:15px
+    }
+    .content { flex:1; padding:20px }
+    table { border-collapse:collapse; width:100%; margin-top:15px }
+    th,td { border:1px solid #ccc; padding:12px; text-align:center }
+    th { background:#1e3a8a; color:white; font-weight:bold }
+    td { background:#f8fafc }
+    .profile-table td:first-child { font-weight:bold; background:#e0e7ff; text-align:left; width:30% }
+    .profile-table td:last-child { text-align:left; width:70% }
+    a { color:#1e3a8a; font-weight:bold; text-decoration:none }
+    h3, h4 { color:#1e3a8a; margin:15px 0 10px 0 }
+    button { padding:8px 15px; margin:5px; border-radius:5px; border:1px solid #ccc; cursor:pointer }
+    button:hover { background:#e5e7eb }
+    .no-data { color:#64748b; font-style:italic; text-align:center; padding:20px }
+  </style>
+</head>
+
+<body>
+<header>🏫 DCME COLLEGE – STUDENT PORTAL</header>
+
+<div class="container">
+  <div class="sidebar">
+    <button onclick="showHome()">🔑 Enter PIN</button>
+    <button onclick="showStudent()">👤 Student Details</button>
+    <button onclick="showAttendance()">📊 Attendance</button>
+    <button onclick="showMarksMain()">📘 Marks</button>
+    <button onclick="showPapers()">📄 Question Papers</button>
+  </div>
+
+  <div class="content">
+
+    <!-- HOME / PIN ENTRY -->
+    <div id="home">
+      <h3>Enter PIN</h3>
+      <input id="pinInput" placeholder="Enter a PIN No">
+      <button onclick="savePIN()">Search</button>
+      <p id="pinMsg"></p>
+    </div>
+
+    <!-- STUDENT DETAILS -->
+    <div id="studentBox" style="display:none">
+      <h3>👤 Student Details</h3>
+      <div id="studentResult"></div>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div id="attendanceBox" style="display:none">
+      <h3>📊 Attendance</h3>
+      <div id="attendanceResult"></div>
+    </div>
+
+    <!-- MARKS -->
+    <div id="marksBox" style="display:none">
+      <h3>Marks</h3>
+      <button onclick="showMarksYear(1)">1st Year</button>
+      <button onclick="showMarksYear(2)">2nd Year</button>
+
+      <div id="marks1st" style="display:none;margin-top:10px">
+        <button onclick="loadMarksInternal()">Internal</button>
+        <button onclick="loadExternalMarks1st()">External</button>
+      </div>
+
+      <div id="marks2nd" style="display:none;margin-top:10px">
+        <button onclick="showSemMarks(3)">3rd Sem</button>
+        <button onclick="showSemMarks(4)">4th Sem</button>
+      </div>
+
+      <div id="marks3rd" style="display:none;margin-top:10px">
+        <button onclick="loadInternalMarks3rd()">Internal</button>
+        <button onclick="loadExternalMarks3rd()">External</button>
+      </div>
+
+      <div id="marks4th" style="display:none;margin-top:10px">
+        <button onclick="loadInternalMarks4th()">Internal</button>
+        <button onclick="loadExternalMarks4th()">External</button>
+      </div>
+
+      <div id="marksResult" style="margin-top:15px"></div>
+    </div>
+
+<div id="papersBox" style="display:none">
+  <h3>📄 Question Papers</h3>
+  <button onclick="showFirstYear()">1st Year</button>
+  <button onclick="showSecondYear()">2nd Year</button>
+
+  <!-- 1st Year Subjects -->
+  <div id="firstYear" style="display:none;margin-top:15px">
+    <button onclick="showSubject('ENGLISH')">ENGLISH</button>
+    <button onclick="showSubject('MATHS1')">MATHS</button>
+    <button onclick="showSubject('PHYSICS')">PHYSICS</button>
+    <button onclick="showSubject('CHEMISTRY')">CHEMISTRY</button>
+    <button onclick="showSubject('BCE')">BCE</button>
+    <button onclick="showSubject('PROGRAMMING')">PROGRAMMING C</button>
+    <button onclick="showSubject('DRAWING')">DRAWING</button>
+  </div>
+
+  <!-- 2nd Year Semester Buttons -->
+  <div id="secondYear" style="display:none;margin-top:15px">
+    <button onclick="showSecondSem(3)">3rd Sem</button>
+    <button onclick="showSecondSem(4)">4th Sem</button>
+  </div>
+
+  <!-- 2nd Year Subjects -->
+  <div id="secondYear3" style="display:none;margin-top:15px">
+    <button onclick="showSubject('MATHS2')">MATHS2</button>
+    <button onclick="showSubject('DE')">DE</button>
+    <button onclick="showSubject('OS')">OS</button>
+    <button onclick="showSubject('DS')">DS</button>
+    <button onclick="showSubject('DBMS')">DBMS</button>
+  </div>
+
+  <div id="secondYear4" style="display:none;margin-top:15px">
+    <button onclick="showSubject('SE')">SE</button>
+    <button onclick="showSubject('WEB')">WEB</button>
+    <button onclick="showSubject('COMP')">COMP</button>
+    <button onclick="showSubject('JAVA')">JAVA</button>
+    <button onclick="showSubject('CN_CS')">CN_CS</button>
+  </div>
+
+  <!-- Subject Paper Buttons -->
+  <div id="subjectBox" style="display:none;margin-top:20px">
+    <h4 id="subTitle"></h4>
+    <div id="paperLinks"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBvUKzyeVfiMAa0iEg_0DalFGG9G13Jwxc",
+  authDomain: "dcme-c23-app.firebaseapp.com",
+  databaseURL: "https://dcme-c23-app-default-rtdb.firebaseio.com",
+  projectId: "dcme-c23-app",
+  storageBucket: "dcme-c23-app.firebasestorage.app",
+  messagingSenderId: "476959025306",
+  appId: "1:476959025306:web:894c060095ecfaff3f1723"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+let currentPIN="";
+
+/* --- BASIC FUNCTIONS --- */
+window.savePIN = () => {
+  currentPIN = pinInput.value.trim();
+  pinMsg.innerText = currentPIN ? "PIN saved successfully" : "Enter valid PIN";
+};
+
+function hideAll() {
+  home.style.display = studentBox.style.display = attendanceBox.style.display =
+  marksBox.style.display = papersBox.style.display = "none";
+  marks1st.style.display = marks2nd.style.display = marks3rd.style.display = marks4th.style.display = "none";
+}
+
+window.showHome = () => { hideAll(); home.style.display="block"; };
+
+/* --- STUDENT DETAILS --- */
+window.showStudent = async () => {
+  if(!currentPIN) return alert("Enter PIN");
+  hideAll(); studentBox.style.display="block";
+
+  const s = await get(ref(db, "students/" + currentPIN));
+  if(!s.exists()) return studentResult.innerHTML = '<div class="no-data">No student data found</div>';
+
+  const d = s.val();
+  studentResult.innerHTML = `
+    <table class="profile-table">
+      <tr><td>Name</td><td>${d.name||'-'}</td></tr>
+      <tr><td>Branch</td><td>${d.branch||'-'}</td></tr>
+      <tr><td>Father</td><td>${d.father||'-'}</td></tr>
+      <tr><td>Village</td><td>${d.village||'-'}</td></tr>
+      <tr><td>Phone</td><td>${d.phone||'-'}</td></tr>
+    </table>
+  `;
+};
+
+/* --- ATTENDANCE --- */
+window.showAttendance = async () => {
+  if(!currentPIN) return alert("Enter PIN");
+  hideAll(); attendanceBox.style.display="block";
+
+  const a = await get(ref(db, "attendance/" + currentPIN));
+  if(!a.exists()) return attendanceResult.innerHTML = '<div class="no-data">No attendance data found</div>';
+
+  let html = '<table><tr><th>Subject/Date</th><th>Details</th></tr>';
+  const data = a.val();
+  Object.entries(data).forEach(([sub, val])=>{
+    html += `<tr><td>${sub}</td><td>${JSON.stringify(val)}</td></tr>`;
+  });
+  html += '</table>';
+  attendanceResult.innerHTML = html;
+};
+
+/* --- MARKS --- */
+window.showMarksMain = () => {
+  if(!currentPIN) return alert("Enter PIN"); 
+  hideAll(); marksBox.style.display="block";
+};
+
+window.showMarksYear = y => {
+  marks1st.style.display = marks2nd.style.display = "none";
+  y==1?marks1st.style.display="block":marks2nd.style.display="block";
+};
+
+/* --- 1ST YEAR MARKS --- */
+window.loadMarksInternal = async () => {
+  if(!currentPIN) return marksResult.innerHTML="Enter PIN";
+  const snap = await get(ref(db, `marks/1st_year/internal/${currentPIN}/subjects`));
+  if(!snap.exists()) return marksResult.innerHTML='<div class="no-data">No internal marks found</div>';
+
+  const subjects = snap.val();
+  let html = "<table><tr><th>Subject</th><th>UT1</th><th>UT2</th><th>UT3</th><th>Average</th></tr>";
+  Object.entries(subjects).forEach(([sub, m])=>{
+    html += `<tr>
+      <td>${sub}</td>
+      <td>${m.ut1||'-'}</td>
+      <td>${m.ut2||'-'}</td>
+      <td>${m.ut3||'-'}</td>
+      <td>${m.average||'-'}</td>
+    </tr>`;
+  });
+  html += "</table>";
+  marksResult.innerHTML = html;
+};
+// ===== 1ST YEAR EXTERNAL MARKS (FINAL FIX) =====
+window.loadExternalMarks1st = async () => {
+  if (!currentPIN) {
+    marksResult.innerHTML = "Enter valid PIN";
+    return;
+  }
+
+  try {
+    const snap = await get(
+      ref(db, `marks/1st_year/external/${currentPIN}/subjects`)
+    );
+
+    if (!snap.exists()) {
+      marksResult.innerHTML =
+        '<div class="no-data">No external marks found</div>';
+      return;
+    }
+
+    const subjects = snap.val();
+    let grandTotal = 0;
+    let finalStatus = "PASS";
+
+    let html = `
+      <table>
+        <tr>
+          <th>Subject Code</th>
+          <th>External</th>
+          <th>Internal</th>
+          <th>Grade</th>
+          <th>Status</th>
+        </tr>
+    `;
+
+    Object.entries(subjects).forEach(([subCode, mark]) => {
+      const ext = Number(mark.External ?? mark.external ?? 0);
+      const intl = Number(mark.Internal ?? mark.internal ?? 0);
+      const status = (mark.Status ?? mark.status ?? "-").toUpperCase();
+
+      grandTotal += ext + intl;
+      if (status === "FAIL") finalStatus = "FAIL";
+
+      html += `
+        <tr>
+          <td>${subCode}</td>
+          <td>${ext}</td>
+          <td>${intl}</td>
+          <td>${mark.Grade ?? mark.grade ?? '-'}</td>
+          <td>${status}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+      <tr>
+        <th colspan="4">Grand Total</th>
+        <th>${grandTotal}</th>
+      </tr>
+      <tr>
+        <th colspan="4">Final Status</th>
+        <th style="color:${finalStatus === "PASS" ? "green" : "red"}">
+          ${finalStatus}
+        </th>
+      </tr>
+    </table>
+    `;
+
+    marksResult.innerHTML = html;
+
+  } catch (e) {
+    console.error(e);
+    marksResult.innerHTML =
+      '<div class="no-data">Error fetching data</div>';
+  }
+};
+
+/* --- 3RD SEM MARKS --- */
+window.showSemMarks = sem => {
+  marks3rd.style.display = marks4th.style.display = "none";
+  if(sem==3) marks3rd.style.display="block";
+  if(sem==4) marks4th.style.display="block";
+};
+
+
+window.loadInternalMarks3rd = async () => {
+  if (!currentPIN) return marksResult.innerHTML = "Enter valid PIN";
+ 
+  try {
+    const snap = await get(ref(db, `marks/3rd_sem/internal/${currentPIN}/subjects`));
+    if (!snap.exists()) return marksResult.innerHTML = '<div class="no-data">No internal marks found</div>';
+
+    const subjects = snap.val();
+    let html = '<table><tr><th>Subject</th><th>UT1</th><th>UT2</th><th>Average</th></tr>';
+    Object.entries(subjects).forEach(([subCode, mark]) => {
+      html += `<tr>
+        <td>${subCode}</td>
+        <td>${mark.ut1 ?? '-'}</td>
+        <td>${mark.ut2 ?? '-'}</td>
+        <td>${mark.average ?? '-'}</td>
+      
+      </tr>`;
+    });
+    html += '</table>';
+    marksResult.innerHTML = html;
+  } catch (err) {
+    console.error(err);
+    marksResult.innerHTML = '<div class="no-data">Error fetching data</div>';
+  }
+};
+
+
+// 3RD SEM SUBJECT ORDER
+const thirdSemOrder = ["301", "302", "303", "304", "305"];
+
+// Marks display function
+window.loadExternalMarks3rd = async () => {
+  if (!currentPIN) return marksResult.innerHTML = "Enter valid PIN";
+
+  try {
+    const snap = await get(
+      ref(db, `marks/3rd_sem/external/${currentPIN}/subjects`)
+    );
+
+    if (!snap.exists()) {
+      marksResult.innerHTML = `<div class="no-data">No External Marks Found</div>`;
+      return;
+    }
+
+    const data = snap.val();
+    let grandTotal = 0;
+    let finalStatus = "PASS";
+
+    let html = `
+      <table>
+        <tr>
+          <th>Subject Code</th>
+          <th>External</th>
+          <th>Internal</th>
+          <th>Grade</th>
+          <th>Status</th>
+        </tr>
+    `;
+
+    // Loop in order
+    thirdSemOrder.forEach(subCode => {
+      if (!data[subCode]) return; // skip if not exists
+
+      const m = data[subCode];
+      const ext = Number(m.external ?? 0);
+      const intl = Number(m.internal ?? 0);
+      const total = ext + intl;
+
+      grandTotal += total;
+      if ((m.status ?? "").toUpperCase() === "FAIL") finalStatus = "FAIL";
+
+      html += `
+        <tr>
+          <td>${subCode}</td>
+          <td>${ext}</td>
+          <td>${intl}</td>
+          <td>${m.grade ?? '-'}</td>
+          <td>${m.status ?? '-'}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+      <tr>
+        <th colspan="4">Grand Total</th>
+        <th>${grandTotal}</th>
+      </tr>
+      <tr>
+        <th colspan="4">Final Status</th>
+        <th style="color:${finalStatus==='PASS'?'green':'red'}">
+          ${finalStatus}
+        </th>
+      </tr>
+    </table>
+    `;
+
+    marksResult.innerHTML = html;
+
+  } catch (err) {
+    console.error(err);
+    marksResult.innerHTML = '<div class="no-data">Error fetching data</div>';
+  }
+};
+
+/* --- 4TH SEM MARKS (similar to 3rd) --- */
+window.loadInternalMarks4th = async () => {
+  if (!currentPIN) return marksResult.innerHTML="Enter valid PIN";
+  const snap = await get(ref(db, `marks/4th_sem/internal/${currentPIN}/subjects`));
+  if(!snap.exists()) return marksResult.innerHTML='<div class="no-data">No internal marks found</div>';
+
+  const subjects = snap.val();
+  let html = "<table><tr><th>Subject</th><th>UT1</th><th>UT2</th><th>Average</th></tr>";
+  Object.entries(subjects).forEach(([sub, m])=>{
+    html += `<tr>
+      <td>${sub}</td>
+      <td>${m.ut1||'-'}</td>
+      <td>${m.ut2||'-'}</td>
+      <td>${m.average||'-'}</td>
+    </tr>`;
+  });
+  html += "</table>";
+  marksResult.innerHTML = html;
+};
+
+window.loadExternalMarks4th = async () => {
+  if (!currentPIN) {
+    marksResult.innerHTML = "Enter valid PIN";
+    return;
+  }
+
+  try {
+    const snap = await get(
+      ref(db, `marks/4th_sem/external/${currentPIN}/subjects`)
+    );
+
+    if (!snap.exists()) {
+      marksResult.innerHTML =
+        '<div class="no-data">No external marks found</div>';
+      return;
+    }
+
+    const subjects = snap.val();
+    let grandTotal = 0;
+    let finalStatus = "PASS";
+
+    let html = `
+      <table>
+        <tr>
+          <th>Subject Code</th>
+          <th>External</th>
+          <th>Internal</th>
+          <th>Grade</th>
+          <th>Status</th>
+        </tr>
+    `;
+
+    Object.entries(subjects).forEach(([subCode, mark]) => {
+      const external = Number(mark.external ?? mark.External ?? 0);
+      const internal = Number(mark.internal ?? mark.Internal ?? 0);
+      const status = (mark.status ?? mark.Status ?? "-").toUpperCase();
+
+      grandTotal += external + internal;
+      if (status === "FAIL") finalStatus = "FAIL";
+
+      html += `
+        <tr>
+          <td>${subCode}</td>
+          <td>${external}</td>
+          <td>${internal}</td>
+          <td>${mark.grade ?? mark.Grade ?? '-'}</td>
+          <td>${status}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+      <tr>
+        <th colspan="4">Grand Total</th>
+        <th>${grandTotal}</th>
+      </tr>
+      <tr>
+        <th colspan="4">Final Status</th>
+        <th style="color:${finalStatus === "PASS" ? "green" : "red"}">
+          ${finalStatus}
+        </th>
+      </tr>
+    </table>`;
+
+    marksResult.innerHTML = html;
+
+  } catch (e) {
+    console.error(e);
+    marksResult.innerHTML =
+      '<div class="no-data">Error fetching data</div>';
+  }
+};
+//* ================= PAPERS (ORIGINAL) ================= */
+const papers = {
+  ENGLISH:{mid1:"https://drive.google.com/file/d/13WBmZjhVsMv2Rytz_LG7wCT0oW7eh0zP/view",mid2:"https://drive.google.com/file/d/1H_m3nDaquxjNBvzJcAvrf_UyLx2kgnce/view",mid3:"https://drive.google.com/file/d/1Mq8kwlQVuU0eH8J-IeaeOqyasRebLLKB/view",ext:"https://drive.google.com/file/d/1a-n_LwvqlMk8-Yi6IxGWVuCWqKFYdSX2/view"},
+  MATHS1:{mid1:"https://drive.google.com/file/d/1HnHgbGhv6loCXjuUyN7RAbXHCXvqU7g7/view",mid2:"https://drive.google.com/file/d/1T68fhQhwdba5syiam6RXOXY2yz9RaInP/view",mid3:"https://drive.google.com/file/d/17MlKQj0O68a_71OuYUJrP791mGJFgfZS/view",ext:"https://drive.google.com/file/d/1I0S0PHmw1xP3CtkUY-9XRkdKsSWidN_U/view"},
+  PHYSICS:{mid1:"https://drive.google.com/file/d/11QI75zs2b04zOVTQDCqczjUp2AE7TMay/view",mid2:"https://drive.google.com/file/d/1VD2UH95P3UyyWptQQnCMIrcZmCD76Grc/view",mid3:"https://drive.google.com/file/d/17FkJmadONi71UXw44Ch-xwpaXbhd9ko7/view",ext:"https://drive.google.com/file/d/152NiESbpoxpyOUiRM04moHPw4zfGCqpK/view"},
+  CHEMISTRY:{mid1:"https://drive.google.com/file/d/1hrA16AJS7phXad2vTGOF230luV4X-jFZ/view",mid2:"https://drive.google.com/file/d/1vsUbuHkdzbRPTWThUfBmmHiyhmqqFgyC/view",mid3:"https://drive.google.com/file/d/1IWNlQgWrFRL5RczN7s_NB6n60b7QJiF/view",ext:"https://drive.google.com/file/d/1ExT1CxcImAdYLongWHXnpSLl58V-44hk/view"},
+  BCE:{mid1:"https://drive.google.com/file/d/15gIJX6EspVWoJbufCocrTCZHpnmCLHFk/view",mid2:"https://drive.google.com/file/d/1ebOPbQUMpSkrlJjhREK5VCYLzidY5sLz/view",mid3:"https://drive.google.com/file/d/1o_MKKrukywMxLFUUtH3kVm6XcgdhVaX_/view",ext:"https://drive.google.com/file/d/1_M9iMW3QLnS7YhvaTLf0Mr7FYS1PhjdF/view"},
+  PROGRAMMING:{mid1:"https://drive.google.com/file/d/1Lkv1khjJTUeec4JjP2llezNXSBdmD0eZ/view",mid2:"https://drive.google.com/file/d/10Vg7QxgxCz81TpMwwcCfZMRu8UtSNc2Y/view",mid3:"https://drive.google.com/file/d/17-yCRk5_fcLCfR16B3NC-NS6axbwb7e9/view",ext:"https://drive.google.com/file/d/1C5c-2Vt54J9MaRCnX8-opu3VLjJ7blkc/view"},
+  DRAWING:{mid1:"https://drive.google.com/file/d/1ch00R3X-F9J_Q2Qv3MbpwcSUq3VR3lRW/view",mid2:"https://drive.google.com/file/d/13dNUOkSd0BphmUIMp-dDfAJDeyMyb7DT/view",mid3:"https://drive.google.com/file/d/1Bjufe9swKKDmWczYIXHSYTuAc-dJJjx1/view",ext:"https://drive.google.com/file/d/1T5tCNPqEkpT5j3IaiuArraDUWaMyzELh/view"},
+  MATHS2:{mid1:"https://drive.google.com/file/d/1tPM18X9oNmI8rwo2wS78OxqquRYScKT6/view",mid2:"https://drive.google.com/file/d/1y1Ep1Nh_b5uXfpcKfIGvrovwOHbZOY56/view",ext:"https://drive.google.com/file/d/1d3U19mQrx5U39LDJzKyvbat5akDFQPJd/view"},
+  OS:{mid1:"https://drive.google.com/file/d/13aovPiNfOPHBq0egH2hhWcUTQ_Zar6vC/view",mid2:"https://drive.google.com/file/d/1I_PdSolS3LBU48tInQlwEaWmg7NNsjPL/view",ext:"https://drive.google.com/file/d/1vq5EQZVLRhVE3Rmck8IbsPlHZvJmYRJB/view"},
+  DE:{mid1:"https://drive.google.com/file/d/1SXPdHVoiePz6Dpz8Srglo3e_4ObRvTuK/view",mid2:"https://drive.google.com/file/d/1TUszcbNyM9EVrdbB24k3XzJ5SdA_cs7S/view",ext:"https://drive.google.com/file/d/1kP8mXHJNsTYWfFWD6dvqN_v0eTsqjUTE/view"},
+  DS:{mid1:"https://drive.google.com/file/d/1hmvUz8aa6xP9p0kMfBx8OE4q1aQQs5OZ/view",mid2:"https://drive.google.com/file/d/1tYpfMEj2EbG2pBhJHMCPW6BbnmmjoPjd/view",ext:"https://drive.google.com/file/d/1qAePduNFL39ZmGnXz3ev4mvFDzPy3uU6/view"},
+  DBMS:{mid1:"https://drive.google.com/file/d/1V2jUBfNfZA-zeTtDq0tTYFjInhL8aDee/view",mid2:"https://drive.google.com/file/d/1EPRF2gum9SaRRAsNyyjkSpW0QJeQ54s5/view",ext:"https://drive.google.com/file/d/1Qxm4QNe9IawZ4F6SuCvylTnpYdf1owAg/view"},
+  SE:{MID1:"https://drive.google.com/file/d/1Nt8TyPq5gVAoCqHRX4ZPolCZYUpIZ-gJ/view",MID2:"https://drive.google.com/file/d/1i6SgkkwZi_OicrXAdhFsqWcl66qBeye-/view",EXT:"https://drive.google.com/file/d/1SwROTg1hgBi2funGJjDQsxm192Q_djCS/view"},
+  WEB:{MID1:"https://drive.google.com/file/d/1xpwAuCptVvlwokTcMbOamuc1NZ5YmhMN/view",MID2:"https://drive.google.com/file/d/1F9hrJbL3seSJl9Uxi5DYJV6tfjhGLYC1/view",EXT:"https://drive.google.com/file/d/1MY1eIxKeaPjy6yy7S7OW2RBsZSHmQegJ/view"},
+  COMP:{MID1:"https://drive.google.com/file/d/1tf5Rte2BFL90PjLgvoL7EMsQV9-DkKlE/view",MID2:"https://drive.google.com/file/d/1w88TE3OlHV1BFMkKkyeOyzeAsCy8ohEh/view",EXT:"https://drive.google.com/file/d/1kKfZZMaehOPf7lRmUmxTAwzC2xn5RfZV/view"},
+  JAVA:{MID1:"https://drive.google.com/file/d/1Sqi9Y24DrS_F-y-AL4cfOCvHXQ11X-vy/view",MID2:"https://drive.google.com/file/d/1A_m7t0hITmkxl5hxn-n3k4siQfxw3kVd/view",EXT:"https://drive.google.com/file/d/1LRbHJE85UaEp21KxzBpbsXwm5-Be_Vpq/view"},
+  "CN_CS":{MID1:"https://drive.google.com/file/d/1s6HAFQqCx6_ns8ncVB5qgOIFkNj57RDp/view",MID2:"https://drive.google.com/file/d/1192tLJYRdyWeI5_-6KuZG5iM4HbbsXml/view",EXT:"https://drive.google.com/file/d/1o9Mdg-16P0o4svZXZhewvEI4ZEtFFSpZ/view"}
+};
+
+// Show papers section
+window.showPapers = () => {
+  hideAll();
+  papersBox.style.display = "block";
+  firstYear.style.display = secondYear.style.display = secondYear3.style.display = secondYear4.style.display = subjectBox.style.display = "none";
+};
+
+// 1st Year
+window.showFirstYear = () => {
+  firstYear.style.display = "block";
+  secondYear.style.display = secondYear3.style.display = secondYear4.style.display = subjectBox.style.display = "none";
+};
+
+// 2nd Year
+window.showSecondYear = () => {
+  secondYear.style.display = "block";
+  firstYear.style.display = secondYear3.style.display = secondYear4.style.display = subjectBox.style.display = "none";
+};
+
+// 2nd Year → Sem
+window.showSecondSem = sem => {
+  secondYear3.style.display = secondYear4.style.display = subjectBox.style.display = "none";
+  sem==3 ? secondYear3.style.display="block" : secondYear4.style.display="block";
+};
+
+// Show Subject → Mid1, Mid2, Mid3, Ext Buttons
+window.showSubject = sub => {
+  subjectBox.style.display = "block";
+  subTitle.innerText = sub + " Question Papers";
+
+  if(!papers[sub]) {
+    paperLinks.innerHTML = "<div class='no-data'>No papers found</div>";
+    return;
+  }
+
+  let h = "";
+  Object.entries(papers[sub]).forEach(([k,v])=>{
+    // k → mid1, mid2, mid3, ext
+    h += `<p><button onclick="window.open('${v}','_blank')">${k.toUpperCase()}</button></p>`;
+  });
+  paperLinks.innerHTML = h;
+};
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(registration => {
+        console.log('ServiceWorker registered: ', registration);
+      })
+      .catch(err => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+  });
+}
+</script>
+</body>
+</html>
